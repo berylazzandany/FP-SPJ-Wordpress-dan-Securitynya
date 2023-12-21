@@ -2,24 +2,24 @@
 
 Tugas yang di buat pada final project kali ini adalah wordpress dan keamanannya menggunakan SSL dan monitoring menggunakan Wazuh.
 ****
-## langkah langkah install wordpress di ubuntu 22.04 LST Linux ##
-1. Lakukan pembaruan Ubuntu 22.04
+## langkah langkah install wordpress di Centos 7 ##
+1. Lakukan pembaruan Centos 7.9
    Pertama-tama, jalankan perintah pembaruan sistem untuk memastikan semua paket di sistem kita mutakhir dan juga cache indeks paket APT dalam keadaan terbaru.
    
-          *sudo apt update && sudo apt upgrade*
+          *sudo yum update -y*
    
 2. Instal Apache & PHP untuk WordPress
    Kita memerlukan web server Apache dan bahasa pemrograman PHP untuk setting CMS WordPress, mari kita install keduanya pada langkah ini.
 
-          * sudo apt install apache2 *
+          * sudo yum install apache -y*
 
    Setelah instalasi Apache selesai, aktifkan dan mulai layanannya.
 
-          * sudo systemctl enable apache2 *
+          * sudo systemctl enable apache *
 
    Periksa status :
   
-          * systemctl status apache2 *
+          * systemctl status apache *
 
    Catatan : alamat IP server dengan alamat Anda yang sebenarnya
 
@@ -29,7 +29,7 @@ Tugas yang di buat pada final project kali ini adalah wordpress dan keamanannya 
 
    Versi default PHP tersedia untuk diinstal menggunakan repositori standar Ubuntu 22.04 LTS. Oleh karena itu, cukup jalankan perintah yang diberikan untuk menginstal PHP dan ekstensi yang diperlukan di sistem Anda.
 
-         * sudo apt install -y php php-{common,mysql,xml,xmlrpc,curl,gd,imagick,cli,dev,imap,mbstring,opcache,soap,zip,intl} *
+         * yum install -y php php-{common,mysql,xml,xmlrpc,curl,gd,imagick,cli,dev,imap,mbstring,opcache,soap,zip,intl} *
 
    cek versi php setelah di install
 
@@ -38,11 +38,11 @@ Tugas yang di buat pada final project kali ini adalah wordpress dan keamanannya 
  3. Instal MariaDB atau MySQL
     Kita bisa menggunakan MariaDB atau MySQL Database Server di Ubuntu 22.04 untuk menyimpan data yang dihasilkan oleh CMS WordPress. Di sini kami menggunakan Server MariaDB.
 
-        * sudo apt install mariadb-server mariadb-client *
+        * yum install mariadb *
 
     Aktifkan, Mulai dan periksa status layanan:
 
-        * sudo systemctl enable --now mariadb *
+        * sudo systemctl enable mariadb *
 
     Memeriksa:
 
@@ -88,7 +88,7 @@ Tugas yang di buat pada final project kali ini adalah wordpress dan keamanannya 
  5. Instal WordPress di Ubuntu 22.04
     File untuk mengatur WordPress perlu diunduh secara manual dan kita dapat melakukannya menggunakan terminal perintah. Berikut adalah perintah yang harus diikuti:
 
-        * sudo apt install wget unzip *
+        * yum install wget unzip *
 
     Unduh WordPress:
 
@@ -112,7 +112,7 @@ Tugas yang di buat pada final project kali ini adalah wordpress dan keamanannya 
 
         * sudo chmod -R 755 /var/www/html/wordpress/ *
 
-6. Konfigurasikan Apache di Ubuntu 22.04
+6. Konfigurasikan Apache di Centos 7.9
    Selanjutnya, aktifkan modul dan file konfigurasi Vhost server web Apache Anda untuk memastikan modul tersebut menyajikan file CMS PorcessWire tanpa kesalahan apa pun.
 
    Buat file konfigurasi untuk WordPress
@@ -162,7 +162,7 @@ Tugas yang di buat pada final project kali ini adalah wordpress dan keamanannya 
 
        http://192.168.56.111
 
-## langkah langkah pasang SSL dan key SSL ##
+## langkah langkah pasang SSL ##
    Langkahnya adalah sebagai berikut :
 1. Install mod_ssl
    
@@ -297,15 +297,146 @@ Jika kita menjalankan iptablesfirewall, perintah yang perlu di jalankan sangat b
 ```
 
 5. Percobaan Enkripsi
-   Sekarang siap untuk mencoba SSL server kita. Buka browser dan ketikkan ```https://domain_atau_ip```
+   Sekarang siap untuk mencoba SSL server kita. Buka browser dan ketikkan ```https://domain_atau_ip```.
 
-Karena sertifikat yang di buat tidak ditandatangani oleh salah satu otoritas sertifikat tepercaya di browser kita, kita mungkin akan melihat peringatan bahwa koneksi tidak private. Hal ini wajar dan normal. Kita hanya tertarik pada aspek enkripsi sertifikat, bukan validasi pihak ketiga atas keaslian host kita. Klik “ADVANCED” dan kemudian klik "Proceed to (link / ip kita".
+Karena sertifikat yang di buat tidak ditandatangani oleh salah satu otoritas sertifikat tepercaya di browser kita, kita mungkin akan melihat peringatan bahwa koneksi tidak private. Hal ini wajar dan normal. Kita hanya tertarik pada aspek enkripsi sertifikat, bukan validasi pihak ketiga atas keaslian host kita. Klik “ADVANCED” dan kemudian klik "Proceed to link / ip kita".
 
 Jika kita melihat di bilah alamat browser, kita akan melihat beberapa indikasi keamanan parsial. Ini bisa berupa gembok dengan tanda “x” di atasnya atau segitiga dengan tanda seru. Dalam hal ini, ini berarti sertifikat tidak dapat divalidasi. Itu masih mengenkripsi koneksi Anda.
 
 Jika Anda mengonfigurasi Apache untuk mengalihkan permintaan HTTP ke HTTPS, Anda juga dapat memeriksa apakah pengalihan berfungsi dengan benar di browser :
 
-```https://domain_atau_ip```
+```
+   https://domain_atau_ip
+```
+
+## langkah langkah pasang key SSH ##
+   Langkahnya adalah sebagai berikut :
+   1. Buat Kunci ssh di client machine
+
+            ssh-keygen
+      
+      Secara default, ssh-keygenakan membuat pasangan kunci RSA 2048-bit, yang cukup aman untuk sebagian besar kasus          penggunaan (Anda dapat meneruskan tanda -b 4096untuk membuat kunci 4096-bit yang lebih besar).
+
+      Setelah memasukkan perintah, Anda akan melihat prompt berikut:
+      
+            Output
+         
+            Generating public/private rsa key pair.
+            Enter file in which to save the key (/your_home/.ssh/id_rsa):
+
+      Tekan ENTERuntuk menyimpan pasangan kunci ke dalam .ssh/subdirektori di direktori home Anda, atau tentukan jalur       alternatif.
+
+   Jika sebelumnya Anda telah membuat pasangan kunci SSH, Anda mungkin melihat perintah berikut:
+
+      Output
+         
+      /home/your_home/.ssh/id_rsa already exists.
+      Overwrite (y/n)?
+
+   Jika Anda memilih untuk menimpa kunci pada disk, Anda tidak akan dapat lagi mengautentikasi menggunakan kunci       sebelumnya. Berhati-hatilah saat memilih yes, karena ini adalah proses destruktif yang tidak dapat dibatalkan.
+
+Anda kemudian akan melihat prompt berikut:
+         
+      Output
+         
+      Enter passphrase (empty for no passphrase):
+
+   Di sini Anda secara opsional dapat memasukkan frasa sandi yang aman, yang sangat disarankan. Frasa sandi menambahkan  lapisan keamanan tambahan untuk mencegah pengguna yang tidak sah masuk. Untuk mempelajari lebih lanjut tentang       keamanan, lihat tutorial kami tentang Cara Mengonfigurasi Otentikasi Berbasis Kunci SSH di Server Linux .
+
+Anda kemudian akan melihat output berikut:
+         
+      Output
+         
+      Your identification has been saved in /your_home/.ssh/id_rsa.
+      Your public key has been saved in /your_home/.ssh/id_rsa.pub.
+      The key fingerprint is:
+      a9:49:2e:2a:5e:33:3e:a9:de:4e:77:11:58:b6:90:26 username@remote_host
+      The key's randomart image is:
+      +--[ RSA 2048]----+
+      |     ..o         |
+      |   E o= .        |
+      |    o. o         |
+      |        ..       |
+      |      ..S        |
+      |     o o.        |
+      |   =o.+.         |
+      |. =++..          |
+      |o=++.            |
+      +-----------------+
+
+Anda sekarang memiliki kunci publik dan pribadi yang dapat Anda gunakan untuk mengautentikasi. Langkah selanjutnya adalah menempatkan kunci publik di server Anda sehingga Anda dapat menggunakan otentikasi berbasis kunci SSH untuk login.
+
+   2. Salin Kunci Publik
+      
+      Cara tercepat untuk menyalin kunci publik Anda ke host CentOS adalah dengan menggunakan utilitas bernama ssh-copy-id. Karena kesederhanaannya, metode ini sangat disarankan jika tersedia. Jika Anda tidak memiliki ssh-copy-idkunci yang tersedia di mesin klien Anda, Anda dapat menggunakan salah satu dari dua metode alternatif yang disediakan di bagian ini (menyalin melalui SSH berbasis kata sandi, atau menyalin kunci secara manual).
+
+      Jika Anda tidak memiliki ssh-copy-idakses, tetapi Anda memiliki akses SSH berbasis kata sandi ke akun di server Anda, Anda dapat mengunggah kunci Anda menggunakan metode SSH konvensional.
+
+Anda dapat melakukan ini dengan menggunakan catperintah untuk membaca konten kunci SSH publik di komputer lokal kami dan menyalurkannya melalui koneksi SSH ke server jarak jauh.
+
+Di sisi lain, Anda dapat memastikan bahwa ~/.sshdirektori tersebut ada dan memiliki izin yang benar pada akun yang Anda gunakan.
+
+Anda kemudian dapat menampilkan konten yang Anda salurkan ke dalam file yang dipanggil authorized_keysdalam direktori ini. Anda akan menggunakan >>simbol pengalihan untuk menambahkan konten alih-alih menimpanya. Ini memungkinkan Anda menambahkan kunci tanpa merusak kunci yang ditambahkan sebelumnya.
+
+Perintah lengkapnya terlihat seperti ini:
+        
+    cat ~/.ssh/id_rsa.pub | ssh username@remote_host "mkdir -p ~/.ssh && touch ~/.ssh/authorized_keys && chmod -R go= ~/.ssh && cat >> ~/.ssh/authorized_keys"
+
+Anda mungkin melihat pesan berikut:
+   
+      Output
+         
+      The authenticity of host '203.0.113.1 (203.0.113.1)' can't be established.
+      ECDSA key fingerprint is fd:fd:d4:f9:77:fe:73:84:e1:55:00:ad:d6:6d:22:fe.
+      Are you sure you want to continue connecting (yes/no)? yes
+
+Ini berarti komputer lokal Anda tidak mengenali host jarak jauh. Ini akan terjadi saat pertama kali Anda terhubung ke host baru. Ketik yesdan tekan ENTERuntuk melanjutkan.
+
+Setelah itu, Anda akan diminta memasukkan kata sandi akun pengguna jarak jauh:
+    
+      Output
+         
+      username@203.0.113.1's password:
+
+Setelah memasukkan kata sandi Anda, konten id_rsa.pubkunci Anda akan disalin ke akhir file authorized_keysakun pengguna jarak jauh.
+
+3. Autentikasi Server dengan Key SSH
+Jika Anda berhasil menyelesaikan salah satu prosedur di atas, Anda seharusnya bisa masuk ke host jarak jauh tanpa kata sandi akun jarak jauh.
+
+Proses dasarnya sama:
+              
+    ssh username@remote_host
+
+Jika ini adalah pertama kalinya Anda terhubung ke host ini (jika Anda menggunakan metode terakhir di atas), Anda mungkin melihat sesuatu seperti ini:
+
+      Output
+         
+      The authenticity of host '203.0.113.1 (203.0.113.1)' can't be established.
+      ECDSA key fingerprint is fd:fd:d4:f9:77:fe:73:84:e1:55:00:ad:d6:6d:22:fe.
+      Are you sure you want to continue connecting (yes/no)? yes
+
+ 4. Menonaktifkan Otentikasi Kata sandi di server
+    Setelah Anda mengonfirmasi bahwa akun jarak jauh Anda memiliki hak administratif, masuklah ke server jarak jauh Anda dengan kunci SSH, baik sebagai root atau dengan akun yang memiliki sudohak istimewa. Kemudian, buka file konfigurasi daemon SSH:
+              
+          sudo vi /etc/ssh/sshd_config
+
+Di dalam file, cari arahan bernama PasswordAuthentication. Ini mungkin bisa dikomentari. Jika ya, tekan iuntuk menyisipkan teks, lalu batalkan komentar pada baris tersebut dengan menghapus #di depan PasswordAuthenticationarahan. Saat Anda menemukan arahannya, atur nilainya menjadi no. Ini akan menonaktifkan kemampuan Anda untuk masuk melalui SSH menggunakan kata sandi akun:
+/etc/ssh/sshd_config
+
+      ...
+      PasswordAuthentication no
+      ...
+
+Ketika Anda selesai melakukan perubahan, tekan ESClalu :wquntuk menulis perubahan pada file dan keluar. Untuk menerapkan perubahan ini, Anda perlu memulai ulang sshdlayanan.
+
+    sudo systemctl restart sshd.service
+
+Sebagai tindakan pencegahan, buka jendela terminal baru dan uji apakah layanan SSH berfungsi dengan benar sebelum menutup sesi ini:
+              
+    ssh username@remote_host
+
+Setelah Anda memverifikasi layanan SSH, Anda dapat menutup semua sesi server saat ini dengan aman.
+Daemon SSH di server CentOS Anda sekarang hanya merespons kunci SSH. Otentikasi berbasis kata sandi telah berhasil dinonaktifkan.  
 
 ## langkah langkah Install Wazuh ##
    Langkahnya adalah sebagai berikut :
