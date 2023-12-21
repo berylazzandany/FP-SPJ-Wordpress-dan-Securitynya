@@ -166,38 +166,148 @@ Tugas yang di buat pada final project kali ini adalah wordpress dan keamanannya 
    Langkahnya adalah sebagai berikut :
 1. Install mod_ssl
    
-   ```$ sudo yum install mod_ssl```
+```
+   $ sudo yum install mod_ssl
+```
 
    Setelah berhasil terinstall dilanjut membuat sertifikat baru
 
-   ```$ sudo mkdir /etc/ssl/private```
-   ```$ sudo chmod 700 /etc/ssl/private```
-   ```$ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt```   
+```
+   $ sudo mkdir /etc/ssl/private
+   $ sudo chmod 700 /etc/ssl/private
+   $ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt
+```
 
 Penting untuk memasukkan nama domain atau alamat IP publik server saat Anda dimintai Nama Umum (misalnya server FQDN atau nama kita). Nilai di sini harus sesuai dengan cara user mengakses server kita.
 
 Keseluruhan petunjuknya akan terlihat seperti ini:
 
-         Country Name (2 letter code) [XX]:US
-State or Province Name (full name) []:Example
-Locality Name (eg, city) [Default City]:Example 
-Organization Name (eg, company) [Default Company Ltd]:Example Inc
-Organizational Unit Name (eg, section) []:Example Dept
-Common Name (eg, your name or your server's hostname) []:your_domain_or_ip
-Email Address []:webmaster@example.com      
+```
+   Country Name (2 letter code) [XX]:US
+   State or Province Name (full name) []:Example
+   Locality Name (eg, city) [Default City]:Example 
+   Organization Name (eg, company) [Default Company Ltd]:Example Inc
+   Organizational Unit Name (eg, section) []:Example Dept
+   Common Name (eg, your name or your server's hostname) []:your_domain_or_ip
+   Email Address []:webmaster@example.com
+```
 
+Kedua file yang kita buat akan ditempatkan di subdirektori yang sesuai di direktori /etc/ssl.
 
+Saat kita menggunakan OpenSSL, Anda juga harus membuat grup Diffie-Hellman yang kuat, yang digunakan dalam menegosiasikan Kerahasiaan Perfect Forward dengan klien. Dapat melakukannya dengan mengetik:
 
+```
+   $ sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+```
 
+Kita sekarang memiliki semua komponen yang diperlukan dari antarmuka yang telah selesai. Hal berikutnya yang harus dilakukan adalah menyiapkan host virtual untuk menampilkan sertifikat baru.
 
+Buka file baru di direktori /etc/httpd/conf.d:
 
+   ```
+   $ sudo vi /etc/httpd/conf.d/your_domain_or_ip.conf
+   ```
+Ketikkan perintah berikut / apabila menggunakan SSH di cmd bisa di paste :
 
-
-
-
+```
+   <VirtualHost *:443>
+       ServerName your_domain_or_ip
+       DocumentRoot /var/www/html
+       SSLEngine on
+       SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt
+       SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key
+   </VirtualHost>
+```
+2. Setting / atur parameter SSL
+   Lanjutan dari setting your_domain_or_ip.conf
+```
+       . . .
+   </VirtualHost>
+   . . .
    
+   # Begin copied text
+   # from https://cipherli.st/
+   
+   SSLCipherSuite EECDH+AESGCM:EDH+AESGCM
+   # Requires Apache 2.4.36 & OpenSSL 1.1.1
+   SSLProtocol -all +TLSv1.2
+   # SSLOpenSSLConfCmd Curves X25519:secp521r1:secp384r1:prime256v1
+   # Older versions
+   # SSLProtocol All -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+   SSLHonorCipherOrder On
+   # Disable preloading HSTS for now.  You can use the commented out header line that includes
+   # the "preload" directive if you understand the implications.
+   #Header always set Strict-Transport-Security "max-age=63072000; includeSubdomains; preload"
+   Header always set Strict-Transport-Security "max-age=63072000; includeSubdomains"
+   # Requires Apache >= 2.4
+   SSLCompression off
+   SSLUseStapling on
+   SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
+   # Requires Apache >= 2.4.11
+   # SSLSessionTickets Off
+```
 
-## langkah langkah pasang SSL dan key SSL ##
+3. Membuat redirect dari HTTP ke HTTPS
+   Untuk mengalihkan semua lalu lintas agar terenkripsi SSL, buat dan buka file yang diakhiri dengan .conf di direktori /etc/httpd/conf.d:
+
+```
+   $ sudo vi /etc/httpd/conf.d/non-ssl.conf
+
+   <VirtualHost *:80>
+          ServerName 192.168.x.x (contoh)
+           Redirect "/" "https://192.168.x.x (contoh)"
+   </VirtualHost>
+
+```
+
+4. Aplikasikan perubahan konfigurasi Apache :
+
+```
+   $ sudo apachectl configtest
+```
+
+Apabila outputnya :
+
+```
+. . .
+Syntax OK
+```
+
+Mulai ulang service Apache dengan perintah :
+
+```
+   $ sudo systemctl restart httpd.service
+```
+
+Selanjutnya, pastikan port 80 dan 443 terbuka di firewall kita. Jika kita tidak menjalankan firewall, maka kita dapat melewatinya.
+
+Jika Anda menjalankan firewall firewalld, kita dapat membuka port ini dengan mengetik :
+
+```
+   $ sudo firewall-cmd --add-service=http
+   $ sudo firewall-cmd --add-service=https
+   $ sudo firewall-cmd --runtime-to-permanent
+```
+
+Jika kita menjalankan iptablesfirewall, perintah yang perlu di jalankan sangat bergantung pada kumpulan aturan kita saat ini. Untuk kumpulan aturan dasar, dapat menambahkan akses HTTP dan HTTPS dengan mengetik:
+
+```
+   $ sudo iptables -I INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+   $ sudo iptables -I INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+```
+
+5. Percobaan Enkripsi
+   Sekarang siap untuk mencoba SSL server kita. Buka browser dan ketikkan ```https://domain_atau_ip```
+
+Karena sertifikat yang di buat tidak ditandatangani oleh salah satu otoritas sertifikat tepercaya di browser kita, kita mungkin akan melihat peringatan bahwa koneksi tidak private. Hal ini wajar dan normal. Kita hanya tertarik pada aspek enkripsi sertifikat, bukan validasi pihak ketiga atas keaslian host kita. Klik “ADVANCED” dan kemudian klik "Proceed to (link / ip kita".
+
+Jika kita melihat di bilah alamat browser, kita akan melihat beberapa indikasi keamanan parsial. Ini bisa berupa gembok dengan tanda “x” di atasnya atau segitiga dengan tanda seru. Dalam hal ini, ini berarti sertifikat tidak dapat divalidasi. Itu masih mengenkripsi koneksi Anda.
+
+Jika Anda mengonfigurasi Apache untuk mengalihkan permintaan HTTP ke HTTPS, Anda juga dapat memeriksa apakah pengalihan berfungsi dengan benar di browser :
+
+```https://domain_atau_ip```
+
+## langkah langkah Install Wazuh ##
    Langkahnya adalah sebagai berikut :
   Memasang Wazuh
    1. Unduh dan jalankan asisten instalasi Wazuh
